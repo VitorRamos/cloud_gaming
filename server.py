@@ -1,15 +1,28 @@
 import socket
 import threading
+import keyboard as kbd
 import time
 
+
 sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock_server.bind(("localhost",2020))
+sock_server.bind(("0.0.0.0",2020))
 sock_server.listen(5)
 
+last_key = ''
+last_state = ''
 def keyboard(cnn):
-    while 1:
-        cnn.send(b"key")
-        time.sleep(1)
+    def keycallback(event):
+        global last_key, last_state
+        if event.name == last_key and event.event_type == last_state:
+            return
+        key = event.name
+        state = event.event_type
+
+        last_key = key
+        last_state = state
+        cnn.send(event.to_json().encode())
+    kbd.hook(keycallback)
+    kbd.wait()
 
 def mouse(cnn):
     while 1:
