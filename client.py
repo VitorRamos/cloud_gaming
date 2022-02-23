@@ -1,6 +1,7 @@
 import socket
 import threading
-import keyboard as kbd
+import win32api, win32con
+import vkcodes
 import json
 
 addr = ("localhost", 2020)
@@ -12,7 +13,19 @@ server_sock.listen(5)
 def keyboard(cnn):
     while 1:
         data = cnn.recv(1024)
-        print(data)
+        aux_ = data.split(b"\r")[:-1]
+        while len(aux_):
+            aux = aux_.pop()
+            aux = aux.decode().split(" ")
+            key = aux[0]
+            state = aux[1]
+            try:
+                vk = vkcodes.VK_CODE[key]
+                keyup = win32con.KEYEVENTF_KEYUP if state == "1" else 0
+                win32api.keybd_event(vk, 0, keyup, 0)
+            except:
+                pass
+            print(data)
 
 
 def mouse(cnn):
