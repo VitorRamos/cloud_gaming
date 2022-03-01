@@ -12,7 +12,7 @@ for name in dir(XK):
     if name[:3] == "XK_":
         key_mapping[getattr(XK, name)] = name[3:]
 
-def keyboard(cnn):
+def input_events(cnn):
     record_dpy = display.Display()
     local_dpy = display.Display()
     
@@ -55,19 +55,9 @@ def keyboard(cnn):
     record_dpy.record_enable_context(ctx, keycallback)
     record_dpy.record_free_context(ctx)
 
-def mouse(cnn):
-    while 1:
-        cnn.send(b"mouse")
-        time.sleep(1)
-
 
 addr = ("localhost", 2020)
 kbd_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 kbd_sock.connect(addr)
-kbd_sock.send(b"keyboard")
-threading.Thread(target=keyboard, args=(kbd_sock,)).start()
-
-mouse_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-mouse_sock.connect(addr)
-mouse_sock.send(b"mouse")
-threading.Thread(target=mouse, args=(mouse_sock,)).start()
+kbd_sock.send(b"input_events")
+threading.Thread(target=input_events, args=(kbd_sock,)).start()

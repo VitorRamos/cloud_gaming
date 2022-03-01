@@ -10,7 +10,7 @@ server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_sock.bind(addr)
 server_sock.listen(5)
 
-def keyboard(cnn):
+def input_events(cnn):
     while 1:
         data = cnn.recv(1024)
         aux_ = data.split(b"\r")[:-1]
@@ -28,15 +28,8 @@ def keyboard(cnn):
             print(data)
 
 
-def mouse(cnn):
-    while 1:
-        data = cnn.recv(1024)
-        print(data)
-
 while 1:
     cnn, addr = server_sock.accept()
     data = cnn.recv(1024)
-    if data == b"keyboard":
-        threading.Thread(target=keyboard, args=(cnn,)).start()
-    if data == b"mouse":
-        threading.Thread(target=mouse, args=(cnn,)).start()
+    if data == b"input_events":
+        threading.Thread(target=input_events, args=(cnn,)).start()
