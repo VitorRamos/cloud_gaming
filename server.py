@@ -2,6 +2,7 @@ import socket
 import threading
 import win32api, win32con, win32gui, win32ui
 import vkcodes
+import mkcodes
 import numpy as np
 
 addr = ("0.0.0.0", 2020)
@@ -9,6 +10,22 @@ addr = ("0.0.0.0", 2020)
 server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_sock.bind(addr)
 server_sock.listen(5)
+
+def mouse_events(cnn):
+    while 1:
+        data = cnn.recv(1024)
+        aux_ = data.split(b"\r")[:-1]
+        while len(aux_):
+            aux = aux_.pop()
+            aux = aux.decode().split(" ")
+            try:
+                mkcode = mkcodes.MKCODES[aux[0]][aux[3]]
+                dx, dy = int(float(aux[1])), int(float(aux[2]))
+                print(mkcode, dx, dy)
+                win32api.mouse_event(win32con.MOUSEEVENTF_ABSOLUTE | win32con.MOUSEEVENTF_MOVE, dx, dy, 0, 0)
+                win32api.mouse_event(mkcode, 0, 0, 0, 0)
+            except:
+                pass
 
 def input_events(cnn):
     while 1:
@@ -68,3 +85,5 @@ while 1:
         threading.Thread(target=input_events, args=(cnn,)).start()
     if data == b"screen":
         threading.Thread(target=screen, args=(cnn,)).start()
+    if data == b"mouse":
+        threading.Thread(target=mouse_events, args=(cnn,)).start()
