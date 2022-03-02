@@ -1,0 +1,7 @@
+
+import win32con
+
+MKCODES = {
+    "1":{"1":win32con.MOUSEEVENTF_LEFTUP,"2":win32con.MOUSEEVENTF_LEFTDOWN},
+    "3":{"1":win32con.MOUSEEVENTF_RIGHTUP,"2":win32con.MOUSEEVENTF_RIGHTDOWN}
+}
