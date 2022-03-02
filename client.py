@@ -24,7 +24,7 @@ window = screen.root.create_window(
     X.InputOutput,
     X.CopyFromParent,
     background_pixel=screen.white_pixel,
-    # override_redirect=1,
+    override_redirect=1,
     event_mask=X.ExposureMask | X.StructureNotifyMask | X.ConfigureNotify,
     colormap=X.CopyFromParent,
 )
@@ -34,14 +34,16 @@ window.xinput_select_events([(xinput.AllDevices,
                                 xinput.KeyPressMask | 
                                 xinput.KeyReleaseMask |
                                 xinput.MotionMask |
-                                xinput.ButtonPressMask),])
+                                xinput.ButtonPressMask |
+                                xinput.ButtonReleaseMask),])
 screen.default_colormap.alloc_named_color('white')
 gc = window.create_gc()
 
 prev_ev = b""
+prev_ev_mouse = b""
 
-def input_events(cnn):
-    global prev_ev
+def input_events(kbd_sock, mouse_sock):
+    global prev_ev, prev_ev_mouse
     while 1:
         data = disp.next_event()
         if data.type == 35:
@@ -50,9 +52,9 @@ def input_events(cnn):
                 try:
                     symb = key_mapping[keysym].lower()
                     ev = f"{symb} {2}".encode()+b"\r"
-                    if prev_ev != ev:
+                    if 1: #prev_ev_mouse != ev:
                         print(prev_ev)
-                        cnn.send(ev)
+                        kbd_sock.send(ev)
                         prev_ev = ev
                 except socket.error as e:
                     print(e)
@@ -67,9 +69,9 @@ def input_events(cnn):
                 try:
                     symb = key_mapping[keysym].lower()
                     ev = f"{symb} {1}".encode()+b"\r" 
-                    if prev_ev != ev:
+                    if 1: #prev_ev_mouse != ev:
                         print(prev_ev)
-                        cnn.send(ev)
+                        kbd_sock.send(ev)
                         prev_ev = ev
                 except socket.error as e:
                     print(e)
@@ -77,8 +79,41 @@ def input_events(cnn):
                 except Exception as e:
                     print(e)
                     continue
-                    
+            
+            if data.evtype == X.ButtonPress:
+                try:
+                    aux = data.data
+                    dx =  int(65535*aux.event_x/1024)
+                    dy =  int(65535*aux.event_y/768)
+                    ev = f"{aux.detail} {dx} {dy} 2".encode()+b"\r"
+                    if 1: #prev_ev_mouse != ev:
+                        print(aux.detail, aux.event_x, aux.event_y, 2)
+                        mouse_sock.send(ev)
+                        prev_ev_mouse = ev
+                except socket.error as e:
+                    print(e)
+                    return
+                except Exception as e:
+                    print(e)
+                    continue
 
+            if data.evtype == X.ButtonRelease:
+                try:
+                    aux = data.data
+                    dx =  int(65535*aux.event_x/1024)
+                    dy =  int(65535*aux.event_y/768)
+                    ev = f"{aux.detail} {dx} {dy} 1".encode()+b"\r"
+                    if 1: #prev_ev_mouse != ev:
+                        print(aux.detail, aux.event_x, aux.event_y, 2)
+                        mouse_sock.send(ev)
+                        prev_ev_mouse = ev
+                except socket.error as e:
+                    print(e)
+                    return
+                except Exception as e:
+                    print(e)
+                    continue
+                    
 def screen_stream(cnn):
     ti = time.time()
     fps = 0
@@ -91,7 +126,7 @@ def screen_stream(cnn):
         img = np.frombuffer(data, dtype='uint8')
         img.shape = (768, 1024, 4)
         img = img[:,:,-2::-1] # RGB to BGR
-        
+        print(img.shape)
         data = Image.fromarray(img,'RGB')
         window.put_pil_image(gc, 0, 0, data)
         disp.flush()
@@ -113,7 +148,10 @@ while 1:
         kbd_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         kbd_sock.connect(addr)
         kbd_sock.send(b"input_events")
-        thread_input = threading.Thread(target=input_events, args=(kbd_sock,))
+        mouse_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        mouse_sock.connect(addr)
+        mouse_sock.send(b"mouse")
+        thread_input = threading.Thread(target=input_events, args=(kbd_sock,mouse_sock))
         thread_input.start()
         
     if thread_screen is None or not thread_screen.is_alive():
