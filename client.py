@@ -113,16 +113,24 @@ def input_events(kbd_sock, mouse_sock):
                 except Exception as e:
                     print(e)
                     continue
-                    
+
+import hashlib
+
 def screen_stream(cnn):
     ti = time.time()
     fps = 0
     while 1:
-        block_sz = cnn.recv(4)
-        block_sz = int.from_bytes(block_sz, "big")
+        header = cnn.recv(5)
+        magic = header[0]
+        if magic != 170:
+            continue
+        block_sz = int.from_bytes(block_sz[1:], "big")
         data = b""
         while len(data) < block_sz:
             data += cnn.recv(block_sz-len(data))
+        checksum = cnn.recv(16)
+        if checksum != hashlib.md5(data).digest():
+            continue
         img = np.frombuffer(data, dtype='uint8')
         img.shape = (768, 1024, 4)
         img = img[:,:,-2::-1] # RGB to BGR

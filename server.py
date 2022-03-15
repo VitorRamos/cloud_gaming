@@ -70,12 +70,17 @@ def get_screenshot():
     # free resources
     return img
 
+import hashlib
+
 def screen(cnn):
     while 1:
         img = get_screenshot()
         data = img.tobytes()
-        sz = len(data)
-        cnn.send(sz.to_bytes(4,"big")+data)
+        sz = len(data).to_bytes(4,"big")
+        magic = 170
+        checksum = hashlib.md5(data).digest()
+        msg = magic+sz+data+checksum
+        cnn.send(msg)
         
 while 1:
     cnn, addr = server_sock.accept()
