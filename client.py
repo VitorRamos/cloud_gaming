@@ -115,6 +115,8 @@ def input_events(kbd_sock, mouse_sock):
                     continue
 
 import hashlib
+import PIL
+import tempfile
 
 def screen_stream(cnn):
     ti = time.time()
@@ -123,19 +125,26 @@ def screen_stream(cnn):
         header = cnn.recv(5)
         magic = header[0]
         if magic != 170:
+            print("Magic error")
             continue
-        block_sz = int.from_bytes(block_sz[1:], "big")
+        block_sz = int.from_bytes(header[1:], "big")
         data = b""
         while len(data) < block_sz:
             data += cnn.recv(block_sz-len(data))
         checksum = cnn.recv(16)
         if checksum != hashlib.md5(data).digest():
+            print("Checksum error")
             continue
-        img = np.frombuffer(data, dtype='uint8')
-        img.shape = (768, 1024, 4)
-        img = img[:,:,-2::-1] # RGB to BGR
-        print(img.shape)
-        data = Image.fromarray(img,'RGB')
+        with tempfile.NamedTemporaryFile(suffix=".jpeg") as tmpfile:
+            tmpfile.write(data)
+            data = Image.open(tmpfile.name)
+            data = data[:,:,-2::-1]
+
+        # img = np.frombuffer(data, dtype='uint8')
+        # img.shape = (768, 1024, 4)
+        # img = img[:,:,-2::-1] # RGB to BGR
+        # print(img.shape)
+        # data = Image.fromarray(img,'RGB')
         window.put_pil_image(gc, 0, 0, data)
         disp.flush()
 

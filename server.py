@@ -71,11 +71,17 @@ def get_screenshot():
     return img
 
 import hashlib
+from PIL import Image
+import tempfile
 
 def screen(cnn):
     while 1:
         img = get_screenshot()
-        data = img.tobytes()
+        aux = Image.fromarray(img)
+        with tempfile.NamedTemporaryFile(suffix=".jpeg") as tmpfile:
+            aux.save(tmpfile.name, optimize=True, quality=95)
+            print(len(aux.tobytes()), len(aux.read()))
+            data = aux.tobytes()
         sz = len(data).to_bytes(4,"big")
         magic = 170
         checksum = hashlib.md5(data).digest()
