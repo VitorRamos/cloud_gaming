@@ -59,9 +59,10 @@ def get_screenshot():
 
     cDC.BitBlt((0, 0), (w, h), dcObj, (0, 0), win32con.SRCCOPY)
     # convert the raw data into a format opencv can read
-    signedIntsArray = dataBitMap.GetBitmapBits(True)
-    img = np.fromstring(signedIntsArray, dtype='uint8')
-    img.shape = (h, w, 4)
+    bmpinfo = dataBitMap.GetInfo()
+    bmpstr = dataBitMap.GetBitmapBits(True)
+    img = Image.frombuffer('RGB',(bmpinfo['bmWidth'], bmpinfo['bmHeight']),
+                bmpstr, 'raw', 'BGRX', 0, 1)
 
     dcObj.DeleteDC()
     cDC.DeleteDC()
@@ -77,11 +78,10 @@ import tempfile
 def screen(cnn):
     while 1:
         img = get_screenshot()
-        aux = Image.fromarray(img)
         with tempfile.NamedTemporaryFile(suffix=".jpeg") as tmpfile:
-            aux.save(tmpfile, optimize=True, quality=95)
-            print(len(aux.tobytes()), len(aux.read()))
-            data = aux.tobytes()
+            img.save(tmpfile, optimize=False, quality=70)
+            tmpfile.seek(0)
+            data = tmpfile.read()
         sz = len(data).to_bytes(4, "big")
         magic = 0b10101010.to_bytes(1, "big")
         checksum = hashlib.md5(data).digest()
