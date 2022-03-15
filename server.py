@@ -79,11 +79,11 @@ def screen(cnn):
         img = get_screenshot()
         aux = Image.fromarray(img)
         with tempfile.NamedTemporaryFile(suffix=".jpeg") as tmpfile:
-            aux.save(tmpfile.name, optimize=True, quality=95)
+            aux.save(tmpfile, optimize=True, quality=95)
             print(len(aux.tobytes()), len(aux.read()))
             data = aux.tobytes()
-        sz = len(data).to_bytes(4,"big")
-        magic = 170
+        sz = len(data).to_bytes(4, "big")
+        magic = 0b10101010.to_bytes(1, "big")
         checksum = hashlib.md5(data).digest()
         msg = magic+sz+data+checksum
         cnn.send(msg)

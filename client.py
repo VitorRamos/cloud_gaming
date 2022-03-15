@@ -137,7 +137,7 @@ def screen_stream(cnn):
             continue
         with tempfile.NamedTemporaryFile(suffix=".jpeg") as tmpfile:
             tmpfile.write(data)
-            data = Image.open(tmpfile.name)
+            data = Image.open(tmpfile)
             data = data[:,:,-2::-1]
 
         # img = np.frombuffer(data, dtype='uint8')
