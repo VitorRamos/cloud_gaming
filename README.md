@@ -1,6 +1,6 @@
 # Edge computing course
 
-## Version 03
+## Version 04
 - Basic client Linux
     - Keyboard and mouse threads
     - Keyboard and mouse sockets
