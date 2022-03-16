@@ -3,8 +3,10 @@ import threading
 import time
 from Xlib import X, display, XK
 from Xlib.ext import xinput
-import numpy as np
+import hashlib
+import tempfile
 from PIL import Image
+from sympy import EX
 
 key_mapping = {}
 for name in dir(XK):
@@ -62,10 +64,10 @@ def input_events(kbd_sock, mouse_sock):
                         kbd_sock.send(ev)
                         prev_ev = ev
                 except socket.error as e:
-                    print("A",e)
+                    print("X.KeyPress",e)
                     return
                 except Exception as e:
-                    print("A",e)
+                    print("X.KeyPress",e)
                     continue
 
 
@@ -79,10 +81,10 @@ def input_events(kbd_sock, mouse_sock):
                         kbd_sock.send(ev)
                         prev_ev = ev
                 except socket.error as e:
-                    print("A",e)
+                    print("X.KeyRelease",e)
                     return
                 except Exception as e:
-                    print("A",e)
+                    print("X.KeyRelease",e)
                     continue
             
             if data.evtype == X.ButtonPress:
@@ -96,10 +98,10 @@ def input_events(kbd_sock, mouse_sock):
                         mouse_sock.send(ev)
                         prev_ev_mouse = ev
                 except socket.error as e:
-                    print("A",e)
+                    print("X.ButtonPress",e)
                     return
                 except Exception as e:
-                    print("A",e)
+                    print("X.ButtonPress",e)
                     continue
 
             if data.evtype == X.ButtonRelease:
@@ -113,15 +115,11 @@ def input_events(kbd_sock, mouse_sock):
                         mouse_sock.send(ev)
                         prev_ev_mouse = ev
                 except socket.error as e:
-                    print("A",e)
+                    print("X.ButtonRelease",e)
                     return
                 except Exception as e:
-                    print("A",e)
+                    print("X.ButtonRelease",e)
                     continue
-
-import hashlib
-import PIL
-import tempfile
 
 def screen_stream(cnn):
     ti = time.time()
@@ -175,8 +173,8 @@ if pid == 0:
         display_sock.send(b"screen")
         try:
             screen_stream(display_sock)
-        except:
-            print("Screen died")
+        except Exception as e:
+            print("Screen died", e)
             break
 
 while 1:
@@ -189,10 +187,3 @@ while 1:
         mouse_sock.send(b"mouse")
         thread_input = threading.Thread(target=input_events, args=(kbd_sock,mouse_sock))
         thread_input.start()
-        
-    # if thread_screen is None or not thread_screen.is_alive():
-    #     display_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #     display_sock.connect(addr)
-    #     display_sock.send(b"screen")
-    #     thread_screen = threading.Thread(target=screen_stream, args=(display_sock,))
-    #     thread_screen.start()
