@@ -160,6 +160,7 @@ def screen_stream(cnn):
 
 
 addr = ("192.168.122.153", 2020)
+addr = ("201.9.172.250", 50505)
 
 thread_input = None
 thread_screen = None
