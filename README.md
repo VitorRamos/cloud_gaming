@@ -7,3 +7,7 @@
 - Basic server Linux
     - Keyboard and mouse sockets
     - Keyboard and mouse threads
+
+
+## Architecture
+![alt text](https://raw.githubusercontent.com/VitorRamos/cloud_gaming/master/architecture.png)
